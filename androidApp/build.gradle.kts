@@ -156,7 +156,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:1.7.6")
     // Full system emoji grid (search + recents) for the reaction picker —
     // the 6-emoji quick palette is the fast path, this is the "+" overflow.
-    implementation("androidx.emoji2:emoji2-emojipicker:1.4.0")
+    implementation("androidx.emoji2:emoji2-emojipicker:1.6.0")
     implementation("androidx.navigation:navigation-compose:2.8.5")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
