@@ -11,7 +11,7 @@ plugins {
     // SQLDelight powers the iOS-side storage actual (Phase 2). Android
     // continues to use Room — SQLDelight's iosMain `.sq` files don't
     // affect the Android build.
-    id("app.cash.sqldelight") version "2.0.2" apply false
+    id("app.cash.sqldelight") version "2.3.2" apply false
 }
 
 // F-Droid reproducible-build hygiene. Every archive task across
