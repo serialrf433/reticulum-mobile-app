@@ -167,7 +167,7 @@ dependencies {
     // QR code generation + scanner Activity. Transitive AppCompat is required
     // by CaptureActivity; fine to pull in alongside Material3.
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
-    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:core:3.5.4")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
