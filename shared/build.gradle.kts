@@ -98,7 +98,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
                 // No msgpack lib: we ship a small in-tree codec under
                 // io.github.thatsfguy.reticulum.codec because the third-party
                 // multiplatform options drift from upstream LXMF on numeric
