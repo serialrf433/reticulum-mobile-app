@@ -121,7 +121,7 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 // Bouncy Castle for Ed25519, X25519, HKDF
-                implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
+                implementation("org.bouncycastle:bcprov-jdk18on:1.84")
                 // Room for SQLite storage
                 implementation("androidx.room:room-runtime:2.6.1")
                 implementation("androidx.room:room-ktx:2.6.1")
