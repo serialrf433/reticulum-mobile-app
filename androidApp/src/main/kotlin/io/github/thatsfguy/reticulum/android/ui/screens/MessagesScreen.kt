@@ -529,7 +529,7 @@ private fun ConversationView(viewModel: ReticulumViewModel, dest: StoredDestinat
     // AND async row growth (images/reply-previews/reactions grow upward,
     // away from the anchor). This replaces the one-shot `scrollToItem`
     // pin that #30 was patched with three times (f15662b/d3e8065/22a9138)
-    // and kept re-breaking. See todo.md.
+    // and kept re-breaking.
 
     // imePadding() at the column level + windowSoftInputMode=adjustResize
     // in the manifest makes the keyboard shrink the LazyColumn instead of
@@ -655,6 +655,24 @@ private fun ConversationView(viewModel: ReticulumViewModel, dest: StoredDestinat
         // a terminal state and the ViewModel drops the entry. Plain
         // text sends (no Resource) never appear here.
         val resourceProgress by viewModel.outboundResourceProgress.collectAsState(initial = emptyMap())
+
+        // `reverseLayout` pins the EXISTING bottom content in place, but
+        // a freshly-prepended message (the new list index 0) lands just
+        // past the bottom anchor — off-screen behind the composer — so a
+        // newly sent/received bubble appears "below the message text box".
+        // reverseLayout alone can't fix that; it only preserves the
+        // position of already-laid-out keyed items. Nudge to index 0 when
+        // the newest message changes, but ONLY when the user is already
+        // near the bottom, so reading back through history isn't yanked
+        // down by an incoming message. This is the targeted complement to
+        // the structural anchor (issue #30), not the old one-shot
+        // scrollToItem-on-entry that kept re-breaking.
+        val newestBubbleId = bubbles.lastOrNull()?.id
+        LaunchedEffect(newestBubbleId) {
+            if (newestBubbleId != null && listState.firstVisibleItemIndex <= 2) {
+                listState.animateScrollToItem(0)
+            }
+        }
 
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 12.dp),

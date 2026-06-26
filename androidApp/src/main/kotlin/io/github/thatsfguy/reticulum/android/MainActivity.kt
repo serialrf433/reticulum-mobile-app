@@ -175,7 +175,10 @@ class MainActivity : ComponentActivity() {
             )
             val darkTheme = when (themePref) {
                 "light" -> false
-                "dark" -> true
+                // "black" is a legacy value from when OLED was a separate
+                // option; the dark theme is now itself true-black, so it
+                // maps straight to dark.
+                "dark", "black" -> true
                 else -> isSystemInDarkTheme()
             }
             ReticulumTheme(darkTheme = darkTheme) {

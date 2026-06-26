@@ -103,6 +103,7 @@ fun SettingsScreen(
     val verboseLog by viewModel.verboseLog.collectAsState()
     val log by viewModel.displayedLog.collectAsState(initial = emptyList())
     val displayName by viewModel.displayName.collectAsState(initial = "Reticulum Mobile")
+    val keysStoredPlaintext by viewModel.keysStoredPlaintext.collectAsState(initial = false)
     val ourDest by viewModel.ourDestHash.collectAsState()
     val cardJson by viewModel.myCardJson.collectAsState()
     val qrBitmap = remember(cardJson) {
@@ -311,6 +312,55 @@ fun SettingsScreen(
                     )
                     runCatching { context.startActivity(intent) }
                 }) { Text("Disable battery optimization") }
+                Spacer(Modifier.height(8.dp))
+            }
+
+            // Identity-key storage warning. Normally the private keys are
+            // sealed at rest with an Android Keystore (hardware-backed) key.
+            // On some devices the Keystore refuses every key spec we try, and
+            // the storage layer degrades to saving the keys UNENCRYPTED in the
+            // DB rather than bricking the app (see IdentityRepoImpl.save). That
+            // degrade used to be silent (logcat only) — surface it here so the
+            // user knows their keys aren't hardware-protected and can fix it.
+            // The flag clears itself once a successful save migrates the keys
+            // into the sealed columns (e.g. after a secure lock screen is set).
+            if (keysStoredPlaintext) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.errorContainer,
+                            RoundedCornerShape(8.dp),
+                        )
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "⚠ Your identity keys are stored unencrypted",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                        Text(
+                            "This device's secure keystore refused to protect your private "
+                                + "keys, so they're saved without hardware encryption. The app "
+                                + "still works, but anyone with deep access to this device could "
+                                + "read your identity. Set a secure screen lock (PIN / password / "
+                                + "biometric), then restart the app — it will re-seal the keys "
+                                + "automatically. Also export an encrypted backup "
+                                + "(Identity → Export) so you can recover if the key is lost.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                OutlinedButton(onClick = {
+                    val intent = android.content.Intent(
+                        android.provider.Settings.ACTION_SECURITY_SETTINGS,
+                    )
+                    runCatching { context.startActivity(intent) }
+                }) { Text("Open security settings") }
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -687,6 +737,131 @@ fun SettingsScreen(
                     checked = autoReconnect,
                     onCheckedChange = { service?.prefs?.setAutoReconnect(it) },
                 )
+            }
+        }
+
+        if (route == SettingsRoute.Connection) Section("Transports") {
+            Text(
+                "Turn off any transport you don't use. A disabled transport is "
+                    + "never started — it won't scan, connect, or parse incoming "
+                    + "bytes — so this install only exposes the paths you actually "
+                    + "rely on.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(12.dp))
+
+            val bleEnabled by (service?.prefs?.bleEnabled
+                ?: kotlinx.coroutines.flow.MutableStateFlow(true)).collectAsState()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("BLE (RNode over Bluetooth LE)", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "Nordic-UART RNode scan + GATT connection.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                androidx.compose.material3.Switch(
+                    checked = bleEnabled,
+                    onCheckedChange = { service?.prefs?.setBleEnabled(it) },
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            val btClassicEnabled by (service?.prefs?.btClassicEnabled
+                ?: kotlinx.coroutines.flow.MutableStateFlow(true)).collectAsState()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Bluetooth Classic (RNode SPP)", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "RFCOMM / SPP for older RNode firmwares without BLE NUS.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                androidx.compose.material3.Switch(
+                    checked = btClassicEnabled,
+                    onCheckedChange = { service?.prefs?.setBtClassicEnabled(it) },
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            val tcpEnabled by (service?.prefs?.tcpEnabled
+                ?: kotlinx.coroutines.flow.MutableStateFlow(true)).collectAsState()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("TCP (direct rnsd over the internet)", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "Plain-TCP HDLC attachment to a remote Reticulum transport node.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                androidx.compose.material3.Switch(
+                    checked = tcpEnabled,
+                    onCheckedChange = { service?.prefs?.setTcpEnabled(it) },
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            val usbEnabled by (service?.prefs?.usbEnabled
+                ?: kotlinx.coroutines.flow.MutableStateFlow(false)).collectAsState()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("USB serial (RNode over USB-OTG)", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "Experimental — wired RNode over a USB-OTG cable (no Bluetooth, "
+                            + "no over-the-air eavesdropping). Supports CDC-ACM and CP210x "
+                            + "chips; verify on your hardware.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                androidx.compose.material3.Switch(
+                    checked = usbEnabled,
+                    onCheckedChange = { service?.prefs?.setUsbEnabled(it) },
+                )
+            }
+
+            if (usbEnabled) {
+                var usbRescanTick by remember { mutableStateOf(0) }
+                val usbDevices = remember(usbRescanTick) {
+                    val mgr = context.getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager
+                    mgr.deviceList.values.filter {
+                        io.github.thatsfguy.reticulum.platform.usbserial.UsbSerialProber.isSupported(it)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                if (usbDevices.isEmpty()) {
+                    Text(
+                        "No supported USB serial device detected. Attach an RNode via a "
+                            + "USB-OTG cable, then Rescan.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    usbDevices.forEach { dev ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(dev.productName ?: "USB device", style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    "VID 0x${dev.vendorId.toString(16)} PID 0x${dev.productId.toString(16)}"
+                                        + " — ${io.github.thatsfguy.reticulum.platform.usbserial.UsbSerialProber.driverName(dev) ?: "?"}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            TextButton(onClick = { ReticulumService.connectUsb(context, dev.deviceName) }) {
+                                Text("Connect")
+                            }
+                        }
+                    }
+                }
+                TextButton(onClick = { usbRescanTick++ }) { Text("Rescan USB") }
             }
         }
 
@@ -1116,14 +1291,17 @@ fun SettingsScreen(
                 ?: kotlinx.coroutines.flow.MutableStateFlow("system")).collectAsState()
             Text("Theme", style = MaterialTheme.typography.bodyMedium)
             Text(
-                "Use the light or dark palette, or follow the system setting.",
+                "Use the light or dark palette, or follow the system setting. " +
+                    "The dark theme uses a pure-black background — best for AMOLED " +
+                    "screens (deeper blacks, lower battery use).",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(10.dp))
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 val opts = listOf(
-                    "system" to "System", "light" to "Light", "dark" to "Dark",
+                    "system" to "System", "light" to "Light",
+                    "dark" to "Dark",
                 )
                 opts.forEachIndexed { i, (value, label) ->
                     SegmentedButton(
@@ -1505,7 +1683,7 @@ private fun SettingsIndex(connected: Boolean, onNavigate: (SettingsRoute) -> Uni
             onNavigate(SettingsRoute.Privacy)
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        SettingsIndexRow("Appearance", "Theme — light, dark or system") {
+        SettingsIndexRow("Appearance", "Theme — light, dark, or system") {
             onNavigate(SettingsRoute.Appearance)
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

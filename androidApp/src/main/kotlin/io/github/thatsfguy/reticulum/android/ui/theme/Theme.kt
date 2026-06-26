@@ -46,13 +46,19 @@ private val LightOutline       = Color(0xFF9C988E)
 private val LightOutlineVar    = Color(0xFFD0CDC4)
 private val LightError         = Color(0xFFA32D2D)
 
-// ── Dark — blue on charcoal ──
+// ── Dark — blue accents on true black (OLED) ──
+// Pure-black (#000000) background so AMOLED pixels switch fully off — real
+// blacks + lower battery. On pure black, surfaces/dividers would vanish, so
+// surface and surfaceVariant are *raised* a few points (the bottom nav bar
+// uses surfaceVariant, cards/sheets use surface) and the outline roles are
+// nudged brighter so dividers stay visible. This was the former separate
+// "OLED" option (issue #39); it is now the one and only dark palette.
 private val DarkAccent         = Color(0xFF5EB0FF)
 private val DarkAccentBg       = Color(0xFF1A3A5C)
 private val DarkAccentText     = Color(0xFFA8D0FF)
-private val DarkBackground     = Color(0xFF0F1115)
-private val DarkSurface        = Color(0xFF1E2230)
-private val DarkSurfaceVar     = Color(0xFF171A21)
+private val DarkBackground     = Color(0xFF000000)
+private val DarkSurface        = Color(0xFF0A0A0C)
+private val DarkSurfaceVar     = Color(0xFF15161B)
 private val DarkTextPrimary    = Color(0xFFE6E8EE)
 private val DarkTextSecondary  = Color(0xFFA6ADBC)
 private val DarkTextOnAccent   = Color(0xFF0F1115)
@@ -60,8 +66,8 @@ private val DarkSecondary      = Color(0xFF8AA6C4)
 private val DarkSecondaryBg    = Color(0xFF26313F)
 private val DarkSecondaryText  = Color(0xFFCBD9EA)
 private val DarkTertiary       = Color(0xFFE0A33A)
-private val DarkOutline        = Color(0xFF5C6373)
-private val DarkOutlineVar     = Color(0xFF343B49)
+private val DarkOutline        = Color(0xFF6B7283)
+private val DarkOutlineVar     = Color(0xFF2E343F)
 private val DarkError          = Color(0xFFF87171)
 
 private val LightColors = lightColorScheme(
