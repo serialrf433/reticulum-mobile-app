@@ -127,7 +127,7 @@ kotlin {
                 implementation("androidx.room:room-ktx:2.6.1")
                 // bzip2 — used by RNS.Resource when transferring large
                 // payloads (LXMF propagation /get round 2 responses, etc.)
-                implementation("org.apache.commons:commons-compress:1.27.1")
+                implementation("org.apache.commons:commons-compress:1.28.0")
             }
         }
         val iosMain by getting {
