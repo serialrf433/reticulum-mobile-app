@@ -108,8 +108,8 @@ kotlin {
                 // Database class lives in commonMain, but the actual
                 // SQLite driver (and any DB instantiation) is iOS-only;
                 // Android's Room storage is unchanged.
-                implementation("app.cash.sqldelight:runtime:2.0.2")
-                implementation("app.cash.sqldelight:coroutines-extensions:2.0.2")
+                implementation("app.cash.sqldelight:runtime:2.3.2")
+                implementation("app.cash.sqldelight:coroutines-extensions:2.3.2")
             }
         }
         val commonTest by getting {
@@ -135,7 +135,7 @@ kotlin {
                 // SQLDelight Native driver — wires the generated
                 // Database class to a real SQLite instance running in
                 // each iOS target's address space.
-                implementation("app.cash.sqldelight:native-driver:2.0.2")
+                implementation("app.cash.sqldelight:native-driver:2.3.2")
             }
         }
         val iosTest by getting {
